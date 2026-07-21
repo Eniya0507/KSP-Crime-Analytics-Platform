@@ -113,6 +113,7 @@ export default function CaseDetailPage() {
               <Row icon={<MapPin size={14} />} label="District" value={c.district?.name ?? c.districtId} />
               <Row icon={<Shield size={14} />} label="Station" value={c.station?.name ?? c.stationId} />
               <Row icon={<User size={14} />} label="Investigating Officer" value={c.officerName} />
+              <Row icon={<Users size={14} />} label="Accused Name" value={c.accused.length ? c.accused.map(a => a.name).join(', ') : 'Unknown'} />
               <Row icon={<Activity size={14} />} label="Severity" value={<SeverityMeter value={c.severity} />} />
               <Row icon={<MapPin size={14} />} label="Location Type" value={c.locationType} />
               <Row icon={<Activity size={14} />} label="Weapon" value={c.weaponUsed ?? 'None'} />

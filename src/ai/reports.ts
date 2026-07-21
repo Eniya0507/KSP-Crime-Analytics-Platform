@@ -117,7 +117,7 @@ export function exportCasePdf(caseId: string) {
       <tr><td><b>IPC Sections</b></td><td colspan="3">${c.ipcSections.join(', ')}</td></tr>
       <tr><td><b>Location</b></td><td>${c.locationType}</td><td><b>Coordinates</b></td><td>${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}</td></tr>
       <tr><td><b>Weapon</b></td><td>${c.weaponUsed ?? 'None'}</td><td><b>Value Loss</b></td><td>₹${c.valueLossInr.toLocaleString('en-IN')}</td></tr>
-      <tr><td><b>Investigating Officer</b></td><td colspan="3">${c.officerName}</td></tr>
+      <tr><td><b>Investigating Officer</b></td><td>${c.officerName}</td><td><b>Accused Name</b></td><td>${c.accused.length ? c.accused.map(a => a.name).join(', ') : 'Unknown'}</td></tr>
     </table>
     <h2>Description</h2><p>${c.description}</p>
     <h2>Accused (${c.accused.length})</h2>

@@ -286,6 +286,20 @@ ${c.description}`;
 
 function withExplainability(content: string, confidence: number, sources: ChatSource[]): string {
   const sourceNames = sources.length > 0 ? sources.map(s => s.title).join(', ') : 'KSP Crime Records (allCases)';
+  const isKn = /[\u0C80-\u0CFF]/.test(content);
+
+  if (isKn) {
+    return `${content}
+
+---
+🔍 **ವಿವರಣಾತ್ಮಕ AI ಕಾರಣ (Explainable AI Trail):**
+- **ವಿಶ್ವಾಸಾರ್ಹತೆ (Confidence Score):** ${Math.round(confidence * 100)}%
+- **ಡೇಟಾ ಮೂಲಗಳು (Data Sources):** Catalyst Data Store (\`${sourceNames}\`)
+- **ಸಾಕ್ಷ್ಯ ಮಾರ್ಗ (Evidence Trail):** ಪ್ರಶ್ನೆಗೆ ಹೊಂದಿಕೆಯಾಗುವ ಅಧಿಕೃತ FIR ಡೇಟಾಬೇಸ್ ದಾಖಲೆಗಳಿಂದ ಫಿಲ್ಟರ್ ಮಾಡಲಾಗಿದೆ.
+- **ಕಾರಣ (Reasoning):** ನಿಯಮ-ಆಧಾರಿತ ಅಲ್ಗಾರಿದಮ್‌ಗಳ ಹೊಂದಾಣಿಕೆ (ಸ್ಥಳ, ಸಮಯ, ಮತ್ತು ವರ್ಗ).
+- **ಪರಿಗಣಿಸಲಾದ ದಾಖಲೆಗಳು (Records Considered):** ${sources.length > 0 ? sources.length : 'ಡೇಟಾಬೇಸ್‌ನಲ್ಲಿರುವ ಎಲ್ಲಾ ದಾಖಲೆಗಳು'}`;
+  }
+
   return `${content}
 
 ---
