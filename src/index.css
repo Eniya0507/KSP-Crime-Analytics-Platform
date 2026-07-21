@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #070d1b;
+  color: #e6edf7;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* App background with subtle grid + radial glow */
+.app-bg {
+  background-color: #070d1b;
+  background-image:
+    radial-gradient(1200px 600px at 80% -10%, rgba(59,130,246,0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(34,211,238,0.08), transparent 60%),
+    linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: auto, auto, 40px 40px, 40px 40px;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0b1426; }
+::-webkit-scrollbar-thumb { background: #1b3056; border-radius: 6px; border: 2px solid #0b1426; }
+::-webkit-scrollbar-thumb:hover { background: #243d6b; }
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-white/5 bg-ink-850/70 backdrop-blur-sm shadow-card;
+  }
+  .card-hover {
+    @apply transition-all duration-200 hover:border-steel-500/40 hover:shadow-glow;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-steel-600 text-white hover:bg-steel-500 shadow-glow;
+  }
+  .btn-ghost {
+    @apply btn text-steel-200 hover:bg-white/5 hover:text-white;
+  }
+  .btn-outline {
+    @apply btn border border-white/10 text-steel-100 hover:border-steel-500/50 hover:bg-white/5;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600 text-white hover:bg-rose-500;
+  }
+  .input {
+    @apply w-full rounded-lg border border-white/10 bg-ink-900/60 px-3 py-2 text-sm text-steel-50 placeholder:text-steel-300/40 outline-none transition focus:border-steel-500/60 focus:ring-2 focus:ring-steel-500/20;
+  }
+  .label {
+    @apply block text-xs font-medium uppercase tracking-wide text-steel-300/80 mb-1.5;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+  .stat-num {
+    @apply font-mono font-semibold tabular-nums;
+  }
+  .nav-link {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-steel-200/80 transition-all hover:bg-white/5 hover:text-white;
+  }
+  .nav-link-active {
+    @apply bg-steel-600/25 text-white shadow-[inset_2px_0_0_0_rgba(59,130,246,0.8)];
+  }
+  .table-wrap {
+    @apply overflow-x-auto rounded-xl border border-white/5;
+  }
+  .tbl {
+    @apply w-full text-left text-sm;
+  }
+  .tbl th {
+    @apply bg-ink-800/80 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-steel-300/80 whitespace-nowrap;
+  }
+  .tbl td {
+    @apply border-t border-white/5 px-4 py-3 text-steel-100 align-middle;
+  }
+  .tbl tbody tr {
+    @apply transition-colors hover:bg-white/[0.03];
+  }
+  .section-title {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-steel-300/60;
+  }
+}
+
+/* Leaflet dark theme overrides */
+.leaflet-container {
+  background: #0b1426 !important;
+  font-family: 'Inter', sans-serif !important;
+}
+.leaflet-tile {
+  filter: invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.95) saturate(0.7);
+}
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: #0f1c33 !important;
+  color: #e6edf7 !important;
+  border: 1px solid rgba(59,130,246,0.3);
+  box-shadow: 0 8px 24px -8px rgba(0,0,0,0.6);
+}
+.leaflet-popup-content { margin: 10px 14px; }
+.leaflet-bar a {
+  background: #0f1c33 !important;
+  color: #e6edf7 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+.leaflet-bar a:hover { background: #1b3056 !important; }
+.heatmap-blob {
+  border-radius: 9999px;
+  filter: blur(2px);
+  mix-blend-mode: screen;
+}
+
+/* Cytoscape-style network canvas helpers */
+.net-node {
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.net-node:hover { filter: drop-shadow(0 0 6px rgba(59,130,246,0.8)); }
+
+/* Recharts tooltip dark */
+.recharts-default-tooltip {
+  background: #0f1c33 !important;
+  border: 1px solid rgba(59,130,246,0.3) !important;
+  border-radius: 8px !important;
+}
+.recharts-tooltip-label, .recharts-tooltip-item { color: #e6edf7 !important; }
