@@ -1,3 +1,4 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { ChatMessage, ChatSource } from '../types';
 import { allCases } from '../data/generator';
 import { getCaseById, searchCases, districtBreakdown, crimeTypeDistribution, kpis, hotspots, repeatOffenders } from '../data/analytics';
@@ -127,15 +128,26 @@ function retrieve(text: string, lang: Lang): ChatSource[] {
       break;
     }
   }
-  const results = searchCases({ districtId: districtId ?? undefined, crimeType });
-  return topN(results, 3).map((c) => ({
+  let results = searchCases({ districtId: districtId ?? undefined, crimeType });
+  
+  if (/low.*risk|minimum.*risk|minor/i.test(norm)) {
+    results = results.filter(c => c.severity < 4);
+  } else if (/medium.*risk|moderate.*risk/i.test(norm)) {
+    results = results.filter(c => c.severity >= 4 && c.severity < 8);
+  } else if (/high.*risk|severe|critical/i.test(norm)) {
+    results = results.filter(c => c.severity >= 8);
+  }
+  
+  results.sort((a, b) => b.severity - a.severity);
+
+  return topN(results, 10).map((c) => ({
     title: `${c.id} — ${c.crimeType}`,
     caseId: c.id,
     snippet: `${c.firNumber} | ${new Date(c.date).toDateString()} | ${c.status} | ${c.districtId}`,
   }));
 }
 
-export function answer(query: string, lang?: Lang, history?: ChatMessage[]): ChatResult {
+export async function answer(query: string, lang?: Lang, history?: ChatMessage[]): Promise<ChatResult> {
   const detectedLang = lang ?? detectLang(query);
   const norm = normalize(query);
   const lower = norm.toLowerCase();
@@ -191,6 +203,20 @@ ${c.description}`;
       const kn = `**${dName}** ಜಿಲ್ಲೆಯಲ್ಲಿ **${cases.length}** ಪ್ರಕರಣಗಳು ದಾಖಲಾಗಿವೆ.\n- ಬಗೆಹರಿದ: ${solved} (${Math.round((solved / cases.length) * 100)}%)\n- ಬಾಕಿ: ${cases.length - solved}`;
       return wrap(detectedLang === 'kn' ? kn : en, sources, 0.92);
     }
+  }
+
+  // Top cases by severity
+  if (/top.*case|most.*severe|highest.*severity|critical.*case|ಪ್ರಮುಖ ಪ್ರಕರಣ/i.test(lower)) {
+    const n = numFromText(lower) ?? 3;
+    const cases = allCases().sort((a, b) => b.severity - a.severity).slice(0, n);
+    
+    if (cases.length === 0) {
+      return wrap(detectedLang === 'kn' ? 'ಯಾವುದೇ ಪ್ರಕರಣಗಳು ಕಂಡುಬಂದಿಲ್ಲ.' : 'No cases found.', [], 0.6);
+    }
+    
+    const en = `**Top ${n} most severe cases:**\n${cases.map((c, i) => `${i + 1}. **${c.id}** (${c.firNumber}) — ${c.crimeType} in ${c.district?.name ?? c.districtId}, Severity: ${c.severity}/10, Status: ${c.status}`).join('\n')}`;
+    const kn = `**ಅತ್ಯಂತ ತೀವ್ರವಾದ ${n} ಪ್ರಕರಣಗಳು:**\n${cases.map((c, i) => `${i + 1}. **${c.id}** (${c.firNumber}) — ${c.crimeType} (ಜಿಲ್ಲೆ: ${c.district?.name ?? c.districtId}), ತೀವ್ರತೆ: ${c.severity}/10, ಸ್ಥಿತಿ: ${c.status}`).join('\n')}`;
+    return wrap(detectedLang === 'kn' ? kn : en, sources, 0.9);
   }
 
   // Top crime types
@@ -273,6 +299,35 @@ ${c.description}`;
   }
 
   // Fallback with context from history
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (apiKey) {
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      const k = kpis();
+      const contextCases = sources.map(s => `Case ID: ${s.caseId}, Details: ${s.title} - ${s.snippet}`).join('\n');
+      const prompt = `You are the KSP (Karnataka State Police) Crime Intelligence Assistant. 
+The user is asking a question: "${query}"
+Context about the current database:
+- Total Cases: ${k.totalCases}
+- Open Cases: ${k.open}
+- Clearance Rate: ${k.clearance}%
+- Active Gangs: ${k.activeGangs}
+
+Relevant Case Records for this query:
+${contextCases || 'No specific cases match this query exactly, speak generally.'}
+
+Answer the question concisely and professionally as a police AI assistant. If you reference cases, use their exact Case ID (e.g. KSP-00042) and details provided in the relevant records. If the question is in Kannada, respond in Kannada.`;
+      
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      return wrap(responseText, sources, 0.7);
+    } catch (err: any) {
+      console.error("Gemini API Error:", err);
+      return wrap(`Gemini API Error: ${err.message || err}`, [], 0);
+    }
+  }
+
   const lastAssistant = [...(history ?? [])].reverse().find((m) => m.role === 'assistant');
   const ctx = lastAssistant ? `\n\nBased on your previous question, you may want to refine: specify a district, crime type, date range, or case number (e.g. KSP-00042).` : '';
   return wrap(

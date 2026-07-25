@@ -97,12 +97,15 @@ export const useChatStore = create<ChatState>()(
           console.warn('[KSP] Catalyst AI function failed, using local RAG:', err);
         }
 
-        setTimeout(() => {
-          const res = answer(trimmed, lang, get().messages);
+        try {
+          const res = await answer(trimmed, lang, get().messages);
           const aMsg = formatChatMessage('assistant', res.content, lang, res.sources, res.confidence);
           set((s) => ({ messages: [...s.messages, aMsg], loading: false }));
           get()._autoSaveActive();
-        }, 500);
+        } catch (err) {
+          console.error(err);
+          set({ loading: false });
+        }
       },
 
       /** Internal: auto-save/update the active session after each message */
